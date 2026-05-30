@@ -21,9 +21,7 @@ export default buildConfig({
     user: Users.slug,
     meta: {
       titleSuffix: '— Allesley Parish Council CMS',
-      favicon: '/favicon.ico',
     },
-    css: path.resolve(dirname, 'app/(payload)/admin/custom.css'),
   },
 
   collections: [
