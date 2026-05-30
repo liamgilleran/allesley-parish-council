@@ -1,0 +1,12 @@
+:root {
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f8fdf9;
+  --theme-elevation-100: #f0fdf4;
+  --color-base-0: #ffffff;
+  --color-success-500: #16a34a;
+}
+
+/* Sidebar brand header */
+.nav__brand {
+  background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+}

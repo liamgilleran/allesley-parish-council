@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply text-gray-800 bg-white font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-council-green text-white px-5 py-2.5 rounded-lg font-medium
+           hover:bg-council-green-mid transition-colors focus:outline-none focus:ring-2 focus:ring-council-green focus:ring-offset-2;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 border-2 border-council-green text-council-green px-5 py-2.5 rounded-lg font-medium
+           hover:bg-council-green hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-council-green focus:ring-offset-2;
+  }
+  .section-heading {
+    @apply text-3xl font-bold text-council-navy mb-2;
+  }
+  .section-subheading {
+    @apply text-lg text-gray-500 mb-8;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .prose-council {
+    @apply prose prose-lg max-w-none
+           prose-headings:text-council-navy
+           prose-a:text-council-green prose-a:no-underline hover:prose-a:underline;
+  }
+}
