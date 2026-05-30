@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
