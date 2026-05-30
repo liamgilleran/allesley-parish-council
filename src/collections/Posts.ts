@@ -36,8 +36,8 @@ export const Posts: CollectionConfig = {
       } as any
     },
     delete: ({ req }) => req.user?.role === 'admin',
-    // Only admins can publish (councillors save as draft, admin approves)
-    publish: ({ req }) => req.user?.role === 'admin',
+    // Publishing is gated via the update access above — councillors cannot
+    // set _status to 'published' because update on published docs returns false.
   },
   fields: [
     {
