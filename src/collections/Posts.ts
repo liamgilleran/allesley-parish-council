@@ -30,10 +30,10 @@ export const Posts: CollectionConfig = {
       if (req.user.role === 'admin') return true
       return {
         and: [
-          { author: { equals: req.user.id } },
-          { _status: { not_equals: 'published' } },
+          { author: { equals: req.user.id } } as Record<string, unknown>,
+          { _status: { not_equals: 'published' } } as Record<string, unknown>,
         ],
-      }
+      } as any
     },
     delete: ({ req }) => req.user?.role === 'admin',
     // Only admins can publish (councillors save as draft, admin approves)
