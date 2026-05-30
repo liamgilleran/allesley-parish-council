@@ -21,14 +21,16 @@ export const metadata: Metadata = {
   },
 }
 
+type Banner = { active: boolean; message: string; severity: 'info' | 'warning' | 'urgent' }
+
 export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
-  let banner: { active: boolean; message: string; severity: 'info' | 'warning' | 'urgent' } | null = null
+  let banner: Banner | null = null
 
   try {
     const payload = await getPayload({ config })
     const settings = await payload.findGlobal({ slug: 'site-settings' })
     if (settings?.emergencyNotice?.active && settings.emergencyNotice.message) {
-      banner = settings.emergencyNotice as typeof banner
+      banner = settings.emergencyNotice as Banner
     }
   } catch {
     // settings not yet seeded — safe to ignore
