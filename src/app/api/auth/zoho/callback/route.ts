@@ -109,29 +109,31 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // ── 4. Mint a Payload JWT using the app secret (no password needed) ────
+    // ── 4. Mint a Payload JWT exactly matching Payload's own jwtSign() ───────
     //
-    // Payload validates tokens with the same secret it uses to sign them.
-    // We sign a token with jose using that secret so the user gets a proper
-    // session without needing their (random) local password.
-    const secret = new TextEncoder().encode(payload.secret)
-    const tokenExpSeconds = 7200 // 2 hours — matches Users collection tokenExpiration
+    // Payload uses jose internally with { alg: 'HS256', typ: 'JWT' } header
+    // and a numeric exp (Unix timestamp). Missing typ:'JWT' causes validation
+    // to fail silently and Payload redirects back to /admin/login.
+    const secretKey = new TextEncoder().encode(payload.secret)
+    const tokenExpSeconds = 7200 // matches Users collection tokenExpiration
+    const issuedAt = Math.floor(Date.now() / 1000)
+    const exp = issuedAt + tokenExpSeconds
 
     const jwtToken = await new SignJWT({
       id:         user.id,
       email:      user.email,
       collection: 'users',
     })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(`${tokenExpSeconds}s`)
-      .sign(secret)
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(exp)
+      .sign(secretKey)
 
     // ── 5. Set the session cookie and redirect ─────────────────────────────
     const response = NextResponse.redirect(`${BASE_URL}${returnTo}`)
     response.cookies.set('payload-token', jwtToken, {
       httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
+      secure:   true,
       sameSite: 'lax',
       path:     '/',
       maxAge:   tokenExpSeconds,
