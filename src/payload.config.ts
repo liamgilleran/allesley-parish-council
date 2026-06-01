@@ -178,6 +178,7 @@ export default buildConfig({
               "id" varchar PRIMARY KEY,
               "_order" integer NOT NULL,
               "_parent_id" integer NOT NULL REFERENCES "posts"("id") ON DELETE CASCADE,
+              "file_id" integer REFERENCES "media"("id"),
               "label" varchar
             );
             CREATE TABLE IF NOT EXISTS "posts_attachments_rels" (
@@ -215,6 +216,7 @@ export default buildConfig({
               "id" varchar PRIMARY KEY,
               "_order" integer NOT NULL,
               "_parent_id" integer NOT NULL REFERENCES "posts_v"("id") ON DELETE CASCADE,
+              "file_id" integer REFERENCES "media"("id"),
               "label" varchar
             );
             CREATE TABLE IF NOT EXISTS "posts_v_version_attachments_rels" (
@@ -247,6 +249,7 @@ export default buildConfig({
               "id" varchar PRIMARY KEY,
               "_order" integer NOT NULL,
               "_parent_id" integer NOT NULL REFERENCES "meetings"("id") ON DELETE CASCADE,
+              "file_id" integer REFERENCES "media"("id"),
               "description" varchar NOT NULL
             );
             CREATE TABLE IF NOT EXISTS "meetings_supporting_papers_rels" (
@@ -279,6 +282,7 @@ export default buildConfig({
               "id" varchar PRIMARY KEY,
               "_order" integer NOT NULL,
               "_parent_id" integer NOT NULL REFERENCES "gallery"("id") ON DELETE CASCADE,
+              "image_id" integer REFERENCES "media"("id"),
               "caption" varchar
             );
             CREATE TABLE IF NOT EXISTS "gallery_images_rels" (
