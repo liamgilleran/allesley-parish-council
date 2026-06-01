@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     'payload',
     '@payloadcms/db-postgres',
-    '@payloadcms/next',
-    '@payloadcms/richtext-lexical',
-    '@payloadcms/ui',
     'drizzle-orm',
     'graphql',
   ],
