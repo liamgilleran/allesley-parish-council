@@ -12,7 +12,7 @@ export const Posts: CollectionConfig = {
     useAsTitle: 'title',
     group: 'Content',
     description: 'News, notices, announcements and crime alerts.',
-    defaultColumns: ['title', 'category', 'status', 'publishedAt', 'author'],
+    defaultColumns: ['title', 'category', '_status', 'publishedAt', 'author'],
     preview: (doc) => {
       return `${process.env.NEXT_PUBLIC_SERVER_URL}/notices/${doc?.slug}`
     },
