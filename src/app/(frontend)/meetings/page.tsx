@@ -77,7 +77,7 @@ export default async function MeetingsPage() {
           </div>
           {m.notes && <p className="text-sm text-gray-500 mt-2">{m.notes}</p>}
         </div>
-        <div className="flex flex-col gap-2 flex-shrink-0" onClick={e => e.preventDefault()}>
+        <div className="flex flex-col gap-2 flex-shrink-0">
           {m.agenda?.url && (
             <a
               href={m.agenda.url}

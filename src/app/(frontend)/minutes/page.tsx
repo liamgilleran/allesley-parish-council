@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { format, getYear } from 'date-fns'
@@ -65,7 +66,11 @@ export default async function MinutesPage() {
               </h2>
               <div className="divide-y divide-gray-100">
                 {byYear[year].map((m: any) => (
-                  <div key={m.id} className="py-4 flex items-center justify-between gap-4 flex-wrap">
+                  <Link
+                    key={m.id}
+                    href={`/meetings/${m.id}`}
+                    className="py-4 flex items-center justify-between gap-4 flex-wrap hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors"
+                  >
                     <div>
                       <p className="font-medium text-council-navy text-sm">{m.title}</p>
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -78,6 +83,7 @@ export default async function MinutesPage() {
                           href={m.agenda.url}
                           target="_blank"
                           rel="noopener noreferrer"
+
                           className="flex items-center gap-1.5 text-xs font-medium text-council-green bg-council-green-light px-3 py-1.5 rounded-lg hover:bg-council-green hover:text-white transition-colors"
                         >
                           <Download className="w-3 h-3" />Agenda
@@ -88,6 +94,7 @@ export default async function MinutesPage() {
                           href={m.minutes.url}
                           target="_blank"
                           rel="noopener noreferrer"
+
                           className="flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
                         >
                           <FileText className="w-3 h-3" />Minutes
@@ -98,13 +105,14 @@ export default async function MinutesPage() {
                           href={m.draftMinutes.url}
                           target="_blank"
                           rel="noopener noreferrer"
+
                           className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
                         >
                           <FileText className="w-3 h-3" />Draft Minutes
                         </a>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>
