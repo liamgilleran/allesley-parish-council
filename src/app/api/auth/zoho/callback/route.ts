@@ -5,7 +5,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { SignJWT } from 'jose'
@@ -130,21 +129,31 @@ export async function GET(req: NextRequest) {
       .setExpirationTime(exp)
       .sign(secretKey)
 
-    // ── 5. Set cookie via next/headers then redirect ───────────────────────
+    // ── 5. Return 200 HTML with cookie + meta-refresh ─────────────────────
     //
-    // Railway's edge proxy strips Set-Cookie from redirect responses when set
-    // manually. Using next/headers cookies() writes through Next.js's own
-    // response pipeline and survives the edge proxy.
-    const cookieStore = await cookies()
-    cookieStore.set('payload-token', jwtToken, {
-      httpOnly: true,
-      secure:   true,
-      sameSite: 'lax',
-      path:     '/',
-      maxAge:   tokenExpSeconds,
-    })
+    // Railway's edge proxy strips Set-Cookie from ALL 3xx redirect responses.
+    // Returning a 200 HTML page with a meta-refresh bypasses this — browsers
+    // honour Set-Cookie on 200 responses and then follow the refresh to /admin.
+    const dest = `${BASE_URL}${returnTo}`
+    const cookieHeader =
+      `payload-token=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${tokenExpSeconds}`
 
-    return NextResponse.redirect(`${BASE_URL}${returnTo}`)
+    return new Response(
+      `<!doctype html><html><head>
+        <meta http-equiv="refresh" content="0;url=${dest}">
+        <title>Signing in…</title>
+      </head><body>
+        <p>Signing in, please wait…</p>
+        <script>window.location.replace(${JSON.stringify(dest)})</script>
+      </body></html>`,
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Set-Cookie':   cookieHeader,
+        },
+      },
+    )
 
   } catch (err) {
     console.error('Zoho SSO callback error', err)
