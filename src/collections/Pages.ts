@@ -48,7 +48,7 @@ export const Pages: CollectionConfig = {
       editor: lexicalEditor({
         features: [
           ParagraphFeature(),
-          HeadingFeature({ enabledHeadingTags: ['h2', 'h3', 'h4'] }),
+          HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
           BoldFeature(),
           ItalicFeature(),
           UnderlineFeature(),
