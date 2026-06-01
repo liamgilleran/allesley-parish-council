@@ -408,19 +408,16 @@ export default buildConfig({
     s3Storage({
       collections: {
         media: {
-          // Store all image size variants in S3 alongside the original
-          generateFileURL: ({ filename }) =>
-            `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${filename}`,
           prefix: 'media',
         },
       },
-      bucket: process.env.S3_BUCKET!,
+      bucket: process.env.AWS_S3_BUCKET_NAME!,
       config: {
-        endpoint: process.env.S3_ENDPOINT,
-        region: process.env.S3_REGION ?? 'auto',
+        endpoint: process.env.AWS_ENDPOINT_URL,
+        region: process.env.AWS_DEFAULT_REGION ?? 'auto',
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
         },
         forcePathStyle: true,
       },
