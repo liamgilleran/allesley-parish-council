@@ -390,16 +390,64 @@ export default buildConfig({
         },
       },
       {
-        // S3 storage plugin adds a 'prefix' column to upload collections
-        name: '20260602_003_add_media_prefix_column',
+        // Sync media table to what Payload v3 + S3 plugin actually generates.
+        // The initial migration used wrong column names and separate join tables
+        // for image sizes; Payload queries inline columns on the main table.
+        name: '20260602_003_sync_media_schema',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
+            -- S3 storage plugin prefix
             ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "prefix" varchar;
+
+            -- Payload v3 names thumbnailURL as thumbnail_u_r_l (each capital gets underscore)
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "thumbnail_u_r_l" varchar;
+
+            -- Inline image size columns (Payload v3 stores sizes in the main table, not join tables)
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_url" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_width" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_height" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_mime_type" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_filesize" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_thumbnail_filename" varchar;
+
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_url" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_width" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_height" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_mime_type" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_filesize" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_card_filename" varchar;
+
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_url" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_width" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_height" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_mime_type" varchar;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_filesize" numeric;
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "sizes_hero_filename" varchar;
           `)
         },
         down: async ({ db }: { db: any }) => {
           await db.execute(sql`
-            ALTER TABLE "media" DROP COLUMN IF EXISTS "prefix";
+            ALTER TABLE "media"
+              DROP COLUMN IF EXISTS "prefix",
+              DROP COLUMN IF EXISTS "thumbnail_u_r_l",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_url",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_width",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_height",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_mime_type",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_filesize",
+              DROP COLUMN IF EXISTS "sizes_thumbnail_filename",
+              DROP COLUMN IF EXISTS "sizes_card_url",
+              DROP COLUMN IF EXISTS "sizes_card_width",
+              DROP COLUMN IF EXISTS "sizes_card_height",
+              DROP COLUMN IF EXISTS "sizes_card_mime_type",
+              DROP COLUMN IF EXISTS "sizes_card_filesize",
+              DROP COLUMN IF EXISTS "sizes_card_filename",
+              DROP COLUMN IF EXISTS "sizes_hero_url",
+              DROP COLUMN IF EXISTS "sizes_hero_width",
+              DROP COLUMN IF EXISTS "sizes_hero_height",
+              DROP COLUMN IF EXISTS "sizes_hero_mime_type",
+              DROP COLUMN IF EXISTS "sizes_hero_filesize",
+              DROP COLUMN IF EXISTS "sizes_hero_filename";
           `)
         },
       },
