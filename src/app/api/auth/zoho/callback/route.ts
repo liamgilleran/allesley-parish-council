@@ -130,14 +130,14 @@ export async function GET(req: NextRequest) {
       .sign(secretKey)
 
     // ── 5. Set the session cookie and redirect ─────────────────────────────
+    //
+    // NextResponse.cookies.set() on a redirect response does NOT reliably
+    // write the Set-Cookie header in Next.js App Router — set it directly.
+    const cookieValue =
+      `payload-token=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${tokenExpSeconds}`
+
     const response = NextResponse.redirect(`${BASE_URL}${returnTo}`)
-    response.cookies.set('payload-token', jwtToken, {
-      httpOnly: true,
-      secure:   true,
-      sameSite: 'lax',
-      path:     '/',
-      maxAge:   tokenExpSeconds,
-    })
+    response.headers.append('Set-Cookie', cookieValue)
     return response
 
   } catch (err) {
