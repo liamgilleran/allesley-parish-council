@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   try {
     // ── 1. Exchange code for access token ──────────────────────────────────
     const tokenRes = await fetch(
-      'https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/token',
+      'https://directory.zoho.eu/p/20113873417/app/258755000000007004/sso/token',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     // ── 2. Fetch user profile from OIDC userinfo endpoint ─────────────────
     const profileRes = await fetch(
-      'https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/userinfo',
+      'https://directory.zoho.eu/p/20113873417/app/258755000000007004/sso/userinfo',
       { headers: { Authorization: `Bearer ${tokens.access_token}` } },
     )
     const profile = await profileRes.json()

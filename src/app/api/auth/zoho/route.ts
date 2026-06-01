@@ -47,6 +47,6 @@ export async function GET(req: NextRequest) {
   })
 
   return NextResponse.redirect(
-    `https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/authorize?${params.toString()}`,
+    `https://directory.zoho.eu/p/20113873417/app/258755000000007004/sso/authorize?${params.toString()}`,
   )
 }
