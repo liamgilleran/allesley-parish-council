@@ -11,6 +11,8 @@ type Args = {
 export const generateMetadata = ({ params, searchParams }: Args): Promise<Metadata> =>
   generatePageMetadata({ config, params, searchParams })
 
-export default async function Page({ params, searchParams }: Args) {
+// Non-async: returns the Promise from RootPage directly so React can
+// track the component context correctly (async call breaks React.use / cache)
+export default function Page({ params, searchParams }: Args) {
   return RootPage({ config, params, searchParams, importMap })
 }
