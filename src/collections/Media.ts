@@ -1,13 +1,10 @@
-import path from 'path'
 import type { CollectionConfig } from 'payload'
 
 export const Media: CollectionConfig = {
   slug: 'media',
   upload: {
-    // Resolved from process.cwd():
-    //   dev  → <project-root>/public/media  ✓
-    //   prod → /app/public/media            ✓  (Dockerfile creates this with correct perms)
-    staticDir: path.resolve(process.cwd(), 'public/media'),
+    // staticDir omitted — files are served from S3 via the s3Storage plugin.
+    // For local dev without S3 env vars, set staticDir: './public/media'
     mimeTypes: [
       'image/jpeg',
       'image/png',

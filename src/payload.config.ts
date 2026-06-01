@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { sql } from 'drizzle-orm'
 
 import { Users } from './collections/Users'
@@ -403,5 +404,26 @@ export default buildConfig({
     schemaOutputFile: path.resolve(dirname, 'generated-schema.graphql'),
   },
 
-  plugins: [],
+  plugins: [
+    s3Storage({
+      collections: {
+        media: {
+          // Store all image size variants in S3 alongside the original
+          generateFileURL: ({ filename }) =>
+            `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${filename}`,
+          prefix: 'media',
+        },
+      },
+      bucket: process.env.S3_BUCKET!,
+      config: {
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION ?? 'auto',
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+        },
+        forcePathStyle: true,
+      },
+    }),
+  ],
 })
