@@ -549,6 +549,45 @@ export default buildConfig({
         },
       },
       {
+        // The initial _posts_v_version_attachments migration used wrong column
+        // names: Payload expects _parent_id, _order, _uuid (underscore-prefixed).
+        // Also the _posts_v_rels table used parent_id instead of _parent_id.
+        name: '20260603_005_fix_posts_v_column_names',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            -- Fix _posts_v_version_attachments column names
+            ALTER TABLE "_posts_v_version_attachments"
+              RENAME COLUMN "order"     TO "_order";
+            ALTER TABLE "_posts_v_version_attachments"
+              RENAME COLUMN "parent_id" TO "_parent_id";
+            ALTER TABLE "_posts_v_version_attachments"
+              ADD COLUMN IF NOT EXISTS "_uuid" varchar;
+
+            -- Fix _posts_v_version_attachments_rels column names
+            ALTER TABLE "_posts_v_version_attachments_rels"
+              RENAME COLUMN "order"     TO "_order";
+            ALTER TABLE "_posts_v_version_attachments_rels"
+              RENAME COLUMN "parent_id" TO "_parent_id";
+
+            -- Fix _posts_v_rels column names
+            ALTER TABLE "_posts_v_rels"
+              RENAME COLUMN "order"     TO "_order";
+            ALTER TABLE "_posts_v_rels"
+              RENAME COLUMN "parent_id" TO "_parent_id";
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "_posts_v_version_attachments" RENAME COLUMN "_order"     TO "order";
+            ALTER TABLE "_posts_v_version_attachments" RENAME COLUMN "_parent_id" TO "parent_id";
+            ALTER TABLE "_posts_v_version_attachments_rels" RENAME COLUMN "_order"     TO "order";
+            ALTER TABLE "_posts_v_version_attachments_rels" RENAME COLUMN "_parent_id" TO "parent_id";
+            ALTER TABLE "_posts_v_rels" RENAME COLUMN "_order"     TO "order";
+            ALTER TABLE "_posts_v_rels" RENAME COLUMN "_parent_id" TO "parent_id";
+          `)
+        },
+      },
+      {
         name: '20260603_003_create_sso_tokens',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
