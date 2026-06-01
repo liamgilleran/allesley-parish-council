@@ -131,17 +131,23 @@ export async function GET(req: NextRequest) {
       .setExpirationTime(exp)
       .sign(secretKey)
 
-    // ── 5. Hand off to SSO-complete Server Component to set the cookie ────
+    // ── 5. Store JWT under a single-use OTP in the database ───────────────
     //
-    // Railway's edge strips Set-Cookie from Route Handler responses (both
-    // redirects and 200s). Setting the cookie from a Next.js Server Component
-    // via cookies() from next/headers works because SSR pages go through a
-    // different pipeline that Railway doesn't strip.
-    //
-    // We pass the JWT as a URL param — it lives there for < 1 second over
-    // HTTPS before being consumed and set as an httpOnly cookie.
+    // The JWT never appears in a URL or non-httpOnly cookie.
+    // The OTP is a random UUID, usable once, expires in 60 seconds.
+    // /sso-complete exchanges the OTP for the JWT server-side, sets an
+    // httpOnly cookie via a Server Action, then discards the OTP row.
+    const otpId = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 60_000) // 60 s
+
+    const db = (payload.db as any).pool
+    await db.query(
+      `INSERT INTO sso_tokens (id, jwt, expires_at) VALUES ($1, $2, $3)`,
+      [otpId, jwtToken, expiresAt],
+    )
+
     const exchangeUrl = new URL(`${BASE_URL}/sso-complete`)
-    exchangeUrl.searchParams.set('token', jwtToken)
+    exchangeUrl.searchParams.set('otp', otpId)
     exchangeUrl.searchParams.set('dest', returnTo)
 
     return NextResponse.redirect(exchangeUrl.toString())

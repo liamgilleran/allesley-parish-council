@@ -549,6 +549,22 @@ export default buildConfig({
         },
       },
       {
+        name: '20260603_003_create_sso_tokens',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            CREATE TABLE IF NOT EXISTS "sso_tokens" (
+              "id"         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              "jwt"        text NOT NULL,
+              "expires_at" timestamp(3) with time zone NOT NULL,
+              "created_at" timestamp(3) with time zone NOT NULL DEFAULT now()
+            );
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`DROP TABLE IF EXISTS "sso_tokens";`)
+        },
+      },
+      {
         name: '20260603_002_add_disable_local_auth',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`

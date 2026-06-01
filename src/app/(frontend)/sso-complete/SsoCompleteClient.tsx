@@ -1,34 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
+import { exchangeOtp } from './actions'
 
+/**
+ * Renders a hidden form and auto-submits it on mount.
+ * The form's Server Action (exchangeOtp) exchanges the OTP for a JWT,
+ * sets an httpOnly cookie, then redirects to the destination — all
+ * server-side, so Railway's proxy never sees a Set-Cookie header to strip.
+ */
 export default function SsoCompleteClient({
-  token,
+  otp,
   dest,
 }: {
-  token: string
+  otp: string
   dest: string
 }) {
-  const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
-    // Set the Payload session cookie directly in the browser.
-    // This bypasses Railway's edge proxy, which strips Set-Cookie headers
-    // from all server responses (Route Handlers, redirects, even 200s).
-    // The cookie is not httpOnly so JS can write it; it is still Secure + SameSite=Lax.
-    const maxAge = 7200
-    const isSecure = location.protocol === 'https:'
-    document.cookie = [
-      `payload-token=${token}`,
-      `path=/`,
-      `max-age=${maxAge}`,
-      `SameSite=Lax`,
-      isSecure ? 'Secure' : '',
-    ].filter(Boolean).join('; ')
-
-    router.replace(dest)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    formRef.current?.requestSubmit()
+  }, [])
 
   return (
     <div style={{
@@ -39,6 +31,10 @@ export default function SsoCompleteClient({
       fontFamily:     'system-ui, sans-serif',
       color:          '#64748b',
     }}>
+      <form ref={formRef} action={exchangeOtp} style={{ display: 'none' }}>
+        <input type="hidden" name="otp"  value={otp}  />
+        <input type="hidden" name="dest" value={dest} />
+      </form>
       Signing in…
     </div>
   )
