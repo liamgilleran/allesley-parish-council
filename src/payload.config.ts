@@ -390,6 +390,20 @@ export default buildConfig({
         },
       },
       {
+        // S3 storage plugin adds a 'prefix' column to upload collections
+        name: '20260602_003_add_media_prefix_column',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "media" ADD COLUMN IF NOT EXISTS "prefix" varchar;
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "media" DROP COLUMN IF EXISTS "prefix";
+          `)
+        },
+      },
+      {
         name: '20260602_002_add_pages_id_to_locked_docs_rels',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
