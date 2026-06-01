@@ -1,5 +1,17 @@
 import type { CollectionConfig } from 'payload'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import {
+  lexicalEditor,
+  HeadingFeature,
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  UnorderedListFeature,
+  OrderedListFeature,
+  LinkFeature,
+  HorizontalRuleFeature,
+  BlockquoteFeature,
+  ParagraphFeature,
+} from '@payloadcms/richtext-lexical'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
@@ -33,7 +45,20 @@ export const Pages: CollectionConfig = {
     {
       name: 'content',
       type: 'richText',
-      editor: lexicalEditor({}),
+      editor: lexicalEditor({
+        features: [
+          ParagraphFeature(),
+          HeadingFeature({ enabledHeadingTags: ['h2', 'h3', 'h4'] }),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          UnorderedListFeature(),
+          OrderedListFeature(),
+          LinkFeature(),
+          HorizontalRuleFeature(),
+          BlockquoteFeature(),
+        ],
+      }),
     },
     {
       name: 'metaDescription',
