@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { setSessionCookie } from './actions'
 
 export default function SsoCompleteClient({
   token,
@@ -14,9 +13,21 @@ export default function SsoCompleteClient({
   const router = useRouter()
 
   useEffect(() => {
-    setSessionCookie(token).then(() => {
-      router.replace(dest)
-    })
+    // Set the Payload session cookie directly in the browser.
+    // This bypasses Railway's edge proxy, which strips Set-Cookie headers
+    // from all server responses (Route Handlers, redirects, even 200s).
+    // The cookie is not httpOnly so JS can write it; it is still Secure + SameSite=Lax.
+    const maxAge = 7200
+    const isSecure = location.protocol === 'https:'
+    document.cookie = [
+      `payload-token=${token}`,
+      `path=/`,
+      `max-age=${maxAge}`,
+      `SameSite=Lax`,
+      isSecure ? 'Secure' : '',
+    ].filter(Boolean).join('; ')
+
+    router.replace(dest)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
