@@ -13,6 +13,39 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: 'footerQuickLinks',
+      type: 'array',
+      label: 'Footer Quick Links',
+      admin: { description: 'Links shown in the Quick Links column of the footer.' },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        {
+          name: 'href',
+          type: 'text',
+          required: true,
+          admin: { description: 'e.g. /council or /meetings' },
+        },
+      ],
+    },
+    {
+      name: 'footerInfoLinks',
+      type: 'array',
+      label: 'Footer Information Links',
+      admin: {
+        description:
+          'Links shown in the Information column of the footer (Privacy Policy, Accessibility, etc.).',
+      },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        {
+          name: 'href',
+          type: 'text',
+          required: true,
+          admin: { description: 'e.g. /privacy or /sitemap' },
+        },
+      ],
+    },
+    {
       name: 'councilName',
       type: 'text',
       defaultValue: 'Allesley Parish Council',

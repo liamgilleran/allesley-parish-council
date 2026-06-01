@@ -13,6 +13,7 @@ import { Meetings } from './collections/Meetings'
 import { Documents } from './collections/Documents'
 import { Gallery } from './collections/Gallery'
 import { CouncilMembers } from './collections/CouncilMembers'
+import { Pages } from './collections/Pages'
 import { SiteSettings } from './collections/SiteSettings'
 
 const filename = fileURLToPath(import.meta.url)
@@ -36,6 +37,7 @@ export default buildConfig({
     Documents,
     Gallery,
     CouncilMembers,
+    Pages,
   ],
 
   globals: [SiteSettings],
@@ -359,6 +361,31 @@ export default buildConfig({
             DROP TABLE IF EXISTS "payload_preferences_rels" CASCADE;
             DROP TABLE IF EXISTS "payload_preferences" CASCADE;
             DROP TABLE IF EXISTS "payload_migrations" CASCADE;
+          `)
+        },
+      },
+      {
+        name: '20260602_001_add_pages_and_footer_links',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            CREATE TABLE IF NOT EXISTS "pages" (
+              "id" serial PRIMARY KEY,
+              "title" varchar NOT NULL,
+              "slug" varchar NOT NULL UNIQUE,
+              "content" jsonb,
+              "meta_description" varchar,
+              "updated_at" timestamp(3) with time zone NOT NULL DEFAULT now(),
+              "created_at" timestamp(3) with time zone NOT NULL DEFAULT now()
+            );
+            ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "footer_quick_links" jsonb;
+            ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "footer_info_links" jsonb;
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "pages" CASCADE;
+            ALTER TABLE "site_settings" DROP COLUMN IF EXISTS "footer_quick_links";
+            ALTER TABLE "site_settings" DROP COLUMN IF EXISTS "footer_info_links";
           `)
         },
       },

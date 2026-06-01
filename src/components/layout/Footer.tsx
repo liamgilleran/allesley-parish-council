@@ -1,8 +1,47 @@
 import Link from 'next/link'
-import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react'
+import { Mail, MapPin, ExternalLink } from 'lucide-react'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
 
-export function Footer() {
+type NavLink = { label: string; href: string }
+
+const DEFAULT_QUICK_LINKS: NavLink[] = [
+  { label: 'Council Members', href: '/council' },
+  { label: 'Upcoming Meetings', href: '/meetings' },
+  { label: 'Past Minutes', href: '/minutes' },
+  { label: 'Notices', href: '/notices' },
+  { label: 'Policies & Publications', href: '/policies' },
+  { label: 'Annual Accounts', href: '/accounts' },
+  { label: 'Photo Gallery', href: '/gallery' },
+  { label: 'Contact Us', href: '/contact' },
+]
+
+const DEFAULT_INFO_LINKS: NavLink[] = [
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Accessibility Statement', href: '/accessibility' },
+  { label: 'Site Map', href: '/sitemap' },
+  { label: 'Disclaimer', href: '/privacy#disclaimer' },
+]
+
+export async function Footer() {
   const year = new Date().getFullYear()
+
+  let quickLinks = DEFAULT_QUICK_LINKS
+  let infoLinks = DEFAULT_INFO_LINKS
+
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const siteSettings = (await payload.findGlobal({ slug: 'site-settings' })) as any
+
+    if (siteSettings?.footerQuickLinks?.length) {
+      quickLinks = siteSettings.footerQuickLinks as NavLink[]
+    }
+    if (siteSettings?.footerInfoLinks?.length) {
+      infoLinks = siteSettings.footerInfoLinks as NavLink[]
+    }
+  } catch {
+    // fall back to defaults if CMS is unavailable
+  }
 
   return (
     <footer className="bg-council-navy text-white">
@@ -26,7 +65,10 @@ export function Footer() {
               councillors.
             </p>
             <div className="space-y-1 text-sm text-gray-300">
-              <a href="mailto:clerk@allesleyparishcouncil.org.uk" className="flex items-center gap-2 hover:text-white transition-colors">
+              <a
+                href="mailto:clerk@allesleyparishcouncil.org.uk"
+                className="flex items-center gap-2 hover:text-white transition-colors"
+              >
                 <Mail className="w-4 h-4 text-council-green" />
                 clerk@allesleyparishcouncil.org.uk
               </a>
@@ -43,16 +85,7 @@ export function Footer() {
               Quick Links
             </h3>
             <ul className="space-y-2 text-sm">
-              {[
-                ['Council Members', '/council'],
-                ['Upcoming Meetings', '/meetings'],
-                ['Past Minutes', '/minutes'],
-                ['Notices', '/notices'],
-                ['Policies & Publications', '/policies'],
-                ['Annual Accounts', '/accounts'],
-                ['Photo Gallery', '/gallery'],
-                ['Contact Us', '/contact'],
-              ].map(([label, href]) => (
+              {quickLinks.map(({ label, href }) => (
                 <li key={href}>
                   <Link href={href} className="text-gray-300 hover:text-white transition-colors">
                     {label}
@@ -68,12 +101,7 @@ export function Footer() {
               Information
             </h3>
             <ul className="space-y-2 text-sm">
-              {[
-                ['Privacy Policy', '/privacy'],
-                ['Accessibility Statement', '/accessibility'],
-                ['Site Map', '/sitemap'],
-                ['Disclaimer', '/privacy#disclaimer'],
-              ].map(([label, href]) => (
+              {infoLinks.map(({ label, href }) => (
                 <li key={href}>
                   <Link href={href} className="text-gray-300 hover:text-white transition-colors">
                     {label}
