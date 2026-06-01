@@ -29,17 +29,20 @@ export async function GET(req: NextRequest) {
 
   try {
     // ── 1. Exchange code for access token ──────────────────────────────────
-    const tokenRes = await fetch('https://accounts.zoho.eu/oauth/v2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        code,
-        client_id:     ZOHO_CLIENT_ID,
-        client_secret: ZOHO_CLIENT_SECRET,
-        redirect_uri:  `${BASE_URL}/api/auth/zoho/callback`,
-        grant_type:    'authorization_code',
-      }),
-    })
+    const tokenRes = await fetch(
+      'https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id:     ZOHO_CLIENT_ID,
+          client_secret: ZOHO_CLIENT_SECRET,
+          redirect_uri:  `${BASE_URL}/api/auth/zoho/callback`,
+          grant_type:    'authorization_code',
+        }),
+      },
+    )
     const tokens = await tokenRes.json()
 
     if (!tokens.access_token) {
@@ -47,15 +50,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${BASE_URL}/admin?sso_error=token_exchange`)
     }
 
-    // ── 2. Fetch Zoho user profile ─────────────────────────────────────────
-    const profileRes = await fetch('https://accounts.zoho.eu/oauth/v2/usersummary', {
-      headers: { Authorization: `Zoho-oauthtoken ${tokens.access_token}` },
-    })
+    // ── 2. Fetch user profile from OIDC userinfo endpoint ─────────────────
+    const profileRes = await fetch(
+      'https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/userinfo',
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } },
+    )
     const profile = await profileRes.json()
 
-    const zohoEmail = profile.Email as string
-    const zohoId    = String(profile.ZUID ?? '')
-    const zohoName  = `${profile.First_Name ?? ''} ${profile.Last_Name ?? ''}`.trim()
+    // OIDC standard field names (sub = unique user ID, email, given_name, family_name)
+    const zohoEmail = (profile.email ?? profile.Email) as string
+    const zohoId    = String(profile.sub ?? profile.ZUID ?? '')
+    const zohoName  = (
+      profile.name ??
+      `${profile.given_name ?? ''} ${profile.family_name ?? ''}`.trim() ??
+      profile.email
+    ) as string
 
     if (!zohoEmail) {
       return NextResponse.redirect(`${BASE_URL}/admin?sso_error=no_email`)

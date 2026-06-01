@@ -42,12 +42,11 @@ export async function GET(req: NextRequest) {
     client_id:     ZOHO_CLIENT_ID,
     response_type: 'code',
     redirect_uri:  `${BASE_URL}/api/auth/zoho/callback`,
-    scope:         'AaaServer.profile.Read',
-    access_type:   'offline',
+    scope:         'openid email profile',
     state:         Buffer.from(returnTo).toString('base64'),
   })
 
   return NextResponse.redirect(
-    `https://accounts.zoho.eu/oauth/v2/auth?${params.toString()}`,
+    `https://directory.zoho.eu/p/20113873417/app/258755000000002036/sso/authorize?${params.toString()}`,
   )
 }
