@@ -5,6 +5,10 @@ export const Users: CollectionConfig = {
   auth: {
     tokenExpiration: 7200,
     verify: false,
+    // Disable server-side session storage so Payload accepts a plain signed JWT
+    // without requiring a matching `sid` row in the database. Our Zoho SSO callback
+    // mints the JWT directly; stateless tokens are fine for this use case.
+    useSessions: false,
   },
   hooks: {
     beforeLogin: [
