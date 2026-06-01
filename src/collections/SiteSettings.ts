@@ -13,37 +13,24 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
+      // Stored as a single JSONB column — avoids Drizzle join-table creation issues.
+      // Format: [{ "label": "Council Members", "href": "/council" }, ...]
       name: 'footerQuickLinks',
-      type: 'array',
+      type: 'json',
       label: 'Footer Quick Links',
-      admin: { description: 'Links shown in the Quick Links column of the footer.' },
-      fields: [
-        { name: 'label', type: 'text', required: true },
-        {
-          name: 'href',
-          type: 'text',
-          required: true,
-          admin: { description: 'e.g. /council or /meetings' },
-        },
-      ],
+      admin: {
+        description:
+          'JSON array of { label, href } objects for the Quick Links column. Leave blank to use site defaults.',
+      },
     },
     {
       name: 'footerInfoLinks',
-      type: 'array',
+      type: 'json',
       label: 'Footer Information Links',
       admin: {
         description:
-          'Links shown in the Information column of the footer (Privacy Policy, Accessibility, etc.).',
+          'JSON array of { label, href } objects for the Information column. Leave blank to use site defaults.',
       },
-      fields: [
-        { name: 'label', type: 'text', required: true },
-        {
-          name: 'href',
-          type: 'text',
-          required: true,
-          admin: { description: 'e.g. /privacy or /sitemap' },
-        },
-      ],
     },
     {
       name: 'councilName',
