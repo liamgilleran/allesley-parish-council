@@ -565,6 +565,86 @@ export default buildConfig({
         },
       },
       {
+        name: '20260603_004_seed_static_pages',
+        up: async ({ db }: { db: any }) => {
+          // Lexical rich-text helper builders
+          const txt  = (text: string, format = 0) => ({ type: 'text', text, version: 1, format, detail: 0, mode: 'normal', style: '' })
+          const h    = (tag: string, ...children: any[]) => ({ type: 'heading', tag, version: 1, direction: 'ltr', format: '', indent: 0, children })
+          const p    = (...children: any[]) => ({ type: 'paragraph', version: 1, direction: 'ltr', format: '', indent: 0, children })
+          const li   = (value: number, ...children: any[]) => ({ type: 'listitem', version: 1, value, direction: 'ltr', format: '', indent: 0, children })
+          const ul   = (...items: any[]) => ({ type: 'list', listType: 'bullet', version: 1, start: 1, tag: 'ul', direction: 'ltr', format: '', indent: 0, children: items })
+          const hr   = () => ({ type: 'horizontalrule', version: 1 })
+          const link = (url: string, label: string, external = false) => ({ type: 'link', version: 1, direction: 'ltr', format: '', indent: 0, rel: external ? 'noopener noreferrer' : undefined, target: external ? '_blank' : null, url, children: [txt(label)] })
+          const root = (...children: any[]) => JSON.stringify({ root: { type: 'root', version: 1, direction: 'ltr', format: '', indent: 0, children } })
+
+          const privacyContent = root(
+            h('h2', txt('Privacy Policy')),
+            p(txt('Allesley Parish Council ("the council") is committed to protecting your personal information. This policy explains how we collect, use and protect information provided by visitors to this website.')),
+            h('h3', txt('What Information We Collect')),
+            ul(
+              li(1, txt('Contact information submitted via the contact form (name, email, message content)')),
+              li(2, txt('Technical information such as IP addresses and browser type (via server logs)')),
+            ),
+            h('h3', txt('How We Use Your Information')),
+            p(txt('Information you submit via the contact form is used solely to respond to your enquiry. We do not sell, share or disclose your personal information to third parties except where required by law.')),
+            h('h3', txt('Data Retention')),
+            p(txt('Correspondence is retained in line with the council\'s Records Management Policy. For details, see our '), link('/policies', 'Policies & Publications'), txt(' page.')),
+            h('h3', txt('Your Rights')),
+            p(txt('Under the UK GDPR and Data Protection Act 2018, you have the right to access, rectify or request erasure of personal data we hold about you. To exercise your rights, contact the Clerk at '), link('mailto:clerk@allesleyparishcouncil.org.uk', 'clerk@allesleyparishcouncil.org.uk')),
+            h('h3', txt('Cookies')),
+            p(txt('This website uses only essential cookies necessary for the site to function. No analytics or advertising cookies are used.')),
+            hr(),
+            h('h2', txt('Disclaimer')),
+            p(txt('While Allesley Parish Council makes every effort to ensure the accuracy of information on this website, we do not accept liability for errors or omissions. Information is provided in good faith and for general informational purposes only.')),
+            p(txt('Links to external websites are provided for convenience. Allesley Parish Council is not responsible for the content of external websites.')),
+            p(txt('Last updated: June 2026. For questions about this policy, contact the Clerk.')),
+          )
+
+          const accessibilityContent = root(
+            p(txt('Allesley Parish Council is committed to making its website accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018.')),
+            h('h2', txt('Compliance Status')),
+            p(txt('This website is partially compliant with the '), link('https://www.w3.org/TR/WCAG21/', 'Web Content Accessibility Guidelines version 2.1', true), txt(' AA standard, due to the non-compliances listed below.')),
+            h('h2', txt('Known Issues')),
+            ul(
+              li(1, txt('Some older PDF documents may not be fully accessible to screen readers. We will work to remediate these on request.')),
+              li(2, txt('Some images may not have complete alternative text descriptions.')),
+            ),
+            h('h2', txt('What to Do If You Cannot Access Parts of This Website')),
+            p(txt('If you need information in a different format, or are experiencing difficulties accessing any part of this website, please '), link('/contact', 'contact the Clerk'), txt(' and we will aim to provide the information in an accessible format within 10 working days.')),
+            h('h2', txt('Reporting Accessibility Problems')),
+            p(txt('We welcome feedback on the accessibility of this website. If you find any problems not listed on this page, or believe we are not meeting accessibility requirements, please '), link('/contact', 'contact us'), txt('.')),
+            h('h2', txt('Enforcement Procedure')),
+            p(txt('The Equality and Human Rights Commission (EHRC) is responsible for enforcing the accessibility regulations. If you are not happy with how we respond to your complaint, '), link('https://www.equalityadvisoryservice.com/', 'contact the Equality Advisory and Support Service (EASS)', true), txt('.')),
+            p(txt('This statement was prepared in 2026 and will be reviewed annually.')),
+          )
+
+          await db.execute(sql`
+            INSERT INTO pages (title, slug, content, meta_description, updated_at, created_at)
+            VALUES
+              (
+                'Privacy Policy & Disclaimer',
+                'privacy',
+                ${privacyContent}::jsonb,
+                'Allesley Parish Council privacy policy, data protection information, and website disclaimer.',
+                now(), now()
+              ),
+              (
+                'Accessibility Statement',
+                'accessibility',
+                ${accessibilityContent}::jsonb,
+                'Allesley Parish Council website accessibility statement and compliance information.',
+                now(), now()
+              )
+            ON CONFLICT (slug) DO NOTHING;
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DELETE FROM pages WHERE slug IN ('privacy', 'accessibility');
+          `)
+        },
+      },
+      {
         name: '20260603_002_add_disable_local_auth',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
