@@ -54,7 +54,7 @@ export default async function MeetingsPage() {
   }
 
   const MeetingCard = ({ m, isPast }: { m: any; isPast?: boolean }) => (
-    <div className={clsx('card p-5', isPast && 'opacity-90')}>
+    <Link href={`/meetings/${m.id}`} className={clsx('card p-5 block hover:shadow-md transition-shadow', isPast && 'opacity-90')}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -63,7 +63,7 @@ export default async function MeetingsPage() {
             </span>
             <span className="badge bg-gray-100 text-gray-600">{m.meetingType}</span>
           </div>
-          <h3 className="font-semibold text-council-navy">{m.title}</h3>
+          <h3 className="font-semibold text-council-navy group-hover:text-council-green">{m.title}</h3>
           <div className="mt-1 space-y-0.5 text-sm text-gray-500">
             <p className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
@@ -77,7 +77,7 @@ export default async function MeetingsPage() {
           </div>
           {m.notes && <p className="text-sm text-gray-500 mt-2">{m.notes}</p>}
         </div>
-        <div className="flex flex-col gap-2 flex-shrink-0">
+        <div className="flex flex-col gap-2 flex-shrink-0" onClick={e => e.preventDefault()}>
           {m.agenda?.url && (
             <a
               href={m.agenda.url}
@@ -111,9 +111,12 @@ export default async function MeetingsPage() {
               Draft Minutes
             </a>
           )}
+          {!m.agenda && !m.minutes && !m.draftMinutes && (
+            <span className="text-xs text-gray-400 italic">View details →</span>
+          )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 
   return (
