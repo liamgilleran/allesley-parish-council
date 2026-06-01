@@ -83,25 +83,8 @@ export default async function AdminLoginPage() {
           Sign in with Zoho
         </a>
 
-        {/* Email/password form — only rendered by the server when disableLocalAuth is false */}
-        {!disableLocalAuth && (
-          <>
-            <div style={{
-              display:    'flex',
-              alignItems: 'center',
-              gap:        '0.75rem',
-              margin:     '1.5rem 0',
-            }}>
-              <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e2e8f0' }} />
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>or</span>
-              <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #e2e8f0' }} />
-            </div>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>
-              Emergency password access
-            </p>
-            <LocalLoginForm />
-          </>
-        )}
+        {/* Email/password form — only present in the HTML when disableLocalAuth is false in the DB */}
+        {!disableLocalAuth && <LocalLoginForm />}
       </div>
     </div>
   )
