@@ -27,6 +27,9 @@ export default buildConfig({
     meta: {
       titleSuffix: '— Allesley Parish Council CMS',
     },
+    components: {
+      afterLogin: ['@/components/admin/ZohoLoginButton'],
+    },
   },
 
   collections: [

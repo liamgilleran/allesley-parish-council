@@ -1,12 +1,13 @@
 /**
  * Zoho OAuth2 callback handler.
  * Exchanges the auth code for tokens, fetches the Zoho user profile,
- * then finds or creates the matching Payload user and sets a session.
+ * then finds or creates the matching Payload user and sets a Payload session cookie.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { SignJWT } from 'jose'
 
 const ZOHO_CLIENT_ID     = process.env.ZOHO_CLIENT_ID!
 const ZOHO_CLIENT_SECRET = process.env.ZOHO_CLIENT_SECRET!
@@ -14,9 +15,9 @@ const BASE_URL           = process.env.NEXT_PUBLIC_SERVER_URL!
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const code    = searchParams.get('code')
-  const state   = searchParams.get('state') ?? ''
-  const error   = searchParams.get('error')
+  const code  = searchParams.get('code')
+  const state = searchParams.get('state') ?? ''
+  const error = searchParams.get('error')
 
   if (error || !code) {
     return NextResponse.redirect(`${BASE_URL}/admin?sso_error=${error ?? 'no_code'}`)
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     : '/admin'
 
   try {
-    // Exchange code for access token
+    // ── 1. Exchange code for access token ──────────────────────────────────
     const tokenRes = await fetch('https://accounts.zoho.eu/oauth/v2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -46,24 +47,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${BASE_URL}/admin?sso_error=token_exchange`)
     }
 
-    // Fetch Zoho user profile
+    // ── 2. Fetch Zoho user profile ─────────────────────────────────────────
     const profileRes = await fetch('https://accounts.zoho.eu/oauth/v2/usersummary', {
       headers: { Authorization: `Zoho-oauthtoken ${tokens.access_token}` },
     })
     const profile = await profileRes.json()
 
-    const zohoEmail  = profile.Email as string
-    const zohoId     = String(profile.ZUID ?? '')
-    const zohoName   = `${profile.First_Name ?? ''} ${profile.Last_Name ?? ''}`.trim()
+    const zohoEmail = profile.Email as string
+    const zohoId    = String(profile.ZUID ?? '')
+    const zohoName  = `${profile.First_Name ?? ''} ${profile.Last_Name ?? ''}`.trim()
 
     if (!zohoEmail) {
       return NextResponse.redirect(`${BASE_URL}/admin?sso_error=no_email`)
     }
 
+    // ── 3. Find or create Payload user ─────────────────────────────────────
     const payload = await getPayload({ config })
 
-    // Find existing user by Zoho ID or email
     let user: any = null
+
     const byZohoId = await payload.find({
       collection: 'users',
       where: { zohoId: { equals: zohoId } },
@@ -80,50 +82,53 @@ export async function GET(req: NextRequest) {
       if (byEmail.docs.length > 0) {
         user = byEmail.docs[0]
         // Back-fill zohoId
-        await payload.update({
-          collection: 'users',
-          id: user.id,
-          data: { zohoId },
-        })
+        await payload.update({ collection: 'users', id: user.id, data: { zohoId } })
       }
     }
 
-    // Auto-provision new users as 'councillor' — admin must promote them
+    // Auto-provision: new Zoho users get 'councillor' role; admin promotes if needed
     if (!user) {
       user = await payload.create({
         collection: 'users',
         data: {
-          email:   zohoEmail,
-          name:    zohoName || zohoEmail,
-          role:    'councillor',
+          email:    zohoEmail,
+          name:     zohoName || zohoEmail,
+          role:     'councillor',
           zohoId,
-          password: crypto.randomUUID(), // random — Zoho SSO only
+          password: crypto.randomUUID(), // random — password login disabled for SSO users
         },
       })
     }
 
-    // Create a Payload JWT for the user
-    const { token } = await payload.login({
+    // ── 4. Mint a Payload JWT using the app secret (no password needed) ────
+    //
+    // Payload validates tokens with the same secret it uses to sign them.
+    // We sign a token with jose using that secret so the user gets a proper
+    // session without needing their (random) local password.
+    const secret = new TextEncoder().encode(payload.secret)
+    const tokenExpSeconds = 7200 // 2 hours — matches Users collection tokenExpiration
+
+    const jwtToken = await new SignJWT({
+      id:         user.id,
+      email:      user.email,
       collection: 'users',
-      data: { email: zohoEmail, password: '' },
-    }).catch(async () => {
-      // If login fails (random password), generate token directly
-      return { token: null }
     })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(`${tokenExpSeconds}s`)
+      .sign(secret)
 
-    if (!token) {
-      return NextResponse.redirect(`${BASE_URL}/admin?sso_error=payload_login`)
-    }
-
+    // ── 5. Set the session cookie and redirect ─────────────────────────────
     const response = NextResponse.redirect(`${BASE_URL}${returnTo}`)
-    response.cookies.set('payload-token', token, {
+    response.cookies.set('payload-token', jwtToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure:   process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/',
-      maxAge: 7200,
+      path:     '/',
+      maxAge:   tokenExpSeconds,
     })
     return response
+
   } catch (err) {
     console.error('Zoho SSO callback error', err)
     return NextResponse.redirect(`${BASE_URL}/admin?sso_error=server_error`)
