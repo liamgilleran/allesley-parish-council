@@ -19,7 +19,12 @@ export const metadata: Metadata = {
   title: 'Sign in — Allesley Parish Council CMS',
 }
 
-export default async function AdminLoginPage() {
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sso_error?: string; detail?: string }>
+}) {
+  const { sso_error, detail } = await searchParams
   // Read the flag server-side — result is never exposed to the client
   let disableLocalAuth = true
   try {
@@ -82,6 +87,20 @@ export default async function AdminLoginPage() {
           </svg>
           Sign in with Zoho
         </a>
+
+        {/* SSO error debug output */}
+        {sso_error && (
+          <div style={{
+            marginTop: '1rem', padding: '0.75rem', background: '#fef2f2',
+            border: '1px solid #fca5a5', borderRadius: '0.375rem',
+            fontSize: '0.75rem', color: '#991b1b', wordBreak: 'break-all',
+          }}>
+            <strong>SSO error: {sso_error}</strong>
+            {detail && <pre style={{ marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>
+              {JSON.stringify(JSON.parse(decodeURIComponent(detail)), null, 2)}
+            </pre>}
+          </div>
+        )}
 
         {/* Email/password form — only present in the HTML when disableLocalAuth is false in the DB */}
         {!disableLocalAuth && <LocalLoginForm />}

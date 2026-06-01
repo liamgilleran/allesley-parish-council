@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const error = searchParams.get('error')
 
   if (error || !code) {
-    return NextResponse.redirect(`${BASE_URL}/admin?sso_error=${error ?? 'no_code'}`)
+    return NextResponse.redirect(`${BASE_URL}/admin/login?sso_error=${error ?? 'no_code'}`)
   }
 
   const returnTo = state
@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
 
     if (!tokens.access_token) {
       console.error('Zoho token exchange failed', tokens)
-      return NextResponse.redirect(`${BASE_URL}/admin?sso_error=token_exchange`)
+      const detail = encodeURIComponent(JSON.stringify(tokens))
+      return NextResponse.redirect(`${BASE_URL}/admin/login?sso_error=token_exchange&detail=${detail}`)
     }
 
     // ── 2. Fetch user profile from OIDC userinfo endpoint ─────────────────
@@ -67,7 +68,8 @@ export async function GET(req: NextRequest) {
     ) as string
 
     if (!zohoEmail) {
-      return NextResponse.redirect(`${BASE_URL}/admin?sso_error=no_email`)
+      const detail = encodeURIComponent(JSON.stringify(profile))
+      return NextResponse.redirect(`${BASE_URL}/admin/login?sso_error=no_email&detail=${detail}`)
     }
 
     // ── 3. Find or create Payload user ─────────────────────────────────────
@@ -157,6 +159,7 @@ export async function GET(req: NextRequest) {
 
   } catch (err) {
     console.error('Zoho SSO callback error', err)
-    return NextResponse.redirect(`${BASE_URL}/admin?sso_error=server_error`)
+    const detail = encodeURIComponent(JSON.stringify({ message: String(err) }))
+    return NextResponse.redirect(`${BASE_URL}/admin/login?sso_error=server_error&detail=${detail}`)
   }
 }
