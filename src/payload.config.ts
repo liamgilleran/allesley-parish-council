@@ -467,6 +467,87 @@ export default buildConfig({
           `)
         },
       },
+      {
+        name: '20260603_001_create_posts_versions_tables',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            CREATE TABLE IF NOT EXISTS "_posts_v" (
+              "id"                       serial PRIMARY KEY,
+              "parent_id"                integer REFERENCES "posts"("id") ON DELETE SET NULL,
+              "version_title"            varchar,
+              "version_slug"             varchar,
+              "version_category"         varchar,
+              "version_excerpt"          varchar,
+              "version_content"          jsonb,
+              "version_featured_image_id" integer REFERENCES "media"("id") ON DELETE SET NULL,
+              "version_published_at"     timestamp(3) with time zone,
+              "version_expires_at"       timestamp(3) with time zone,
+              "version_approval_notes"   varchar,
+              "version_updated_at"       timestamp(3) with time zone,
+              "version_created_at"       timestamp(3) with time zone,
+              "version__status"          varchar DEFAULT 'draft',
+              "created_at"               timestamp(3) with time zone DEFAULT now() NOT NULL,
+              "updated_at"               timestamp(3) with time zone DEFAULT now() NOT NULL,
+              "snapshot"                 boolean,
+              "published_locale"         varchar,
+              "autosave"                 boolean,
+              "latest"                   boolean
+            );
+
+            CREATE INDEX IF NOT EXISTS "_posts_v_parent_idx"          ON "_posts_v" ("parent_id");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_slug_idx"    ON "_posts_v" ("version_slug");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version__status_idx" ON "_posts_v" ("version__status");
+            CREATE INDEX IF NOT EXISTS "_posts_v_created_at_idx"      ON "_posts_v" ("created_at");
+            CREATE INDEX IF NOT EXISTS "_posts_v_updated_at_idx"      ON "_posts_v" ("updated_at");
+
+            -- Version attachments array table
+            CREATE TABLE IF NOT EXISTS "_posts_v_version_attachments" (
+              "id"          serial PRIMARY KEY,
+              "order"       integer NOT NULL,
+              "parent_id"   integer NOT NULL REFERENCES "_posts_v"("id") ON DELETE CASCADE,
+              "version_label" varchar
+            );
+
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_order_idx"  ON "_posts_v_version_attachments" ("order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_parent_idx" ON "_posts_v_version_attachments" ("parent_id");
+
+            -- Version rels table (relationships: featuredImage already inline, author + attachment files via rels)
+            CREATE TABLE IF NOT EXISTS "_posts_v_rels" (
+              "id"         serial PRIMARY KEY,
+              "order"      integer,
+              "parent_id"  integer NOT NULL REFERENCES "_posts_v"("id") ON DELETE CASCADE,
+              "path"       varchar NOT NULL,
+              "media_id"   integer REFERENCES "media"("id") ON DELETE CASCADE,
+              "users_id"   integer REFERENCES "users"("id") ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_order_idx"  ON "_posts_v_rels" ("order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_parent_idx" ON "_posts_v_rels" ("parent_id");
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_path_idx"   ON "_posts_v_rels" ("path");
+
+            -- Version attachments rels
+            CREATE TABLE IF NOT EXISTS "_posts_v_version_attachments_rels" (
+              "id"        serial PRIMARY KEY,
+              "order"     integer,
+              "parent_id" integer NOT NULL REFERENCES "_posts_v_version_attachments"("id") ON DELETE CASCADE,
+              "path"      varchar NOT NULL,
+              "media_id"  integer REFERENCES "media"("id") ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_rels_order_idx"  ON "_posts_v_version_attachments_rels" ("order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_rels_parent_idx" ON "_posts_v_version_attachments_rels" ("parent_id");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_rels_path_idx"   ON "_posts_v_version_attachments_rels" ("path");
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "_posts_v_version_attachments_rels";
+            DROP TABLE IF EXISTS "_posts_v_rels";
+            DROP TABLE IF EXISTS "_posts_v_version_attachments";
+            DROP TABLE IF EXISTS "_posts_v";
+          `)
+        },
+      },
     ],
   }),
 
