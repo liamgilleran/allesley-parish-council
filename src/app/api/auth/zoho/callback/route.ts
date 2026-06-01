@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
     //
     // We pass the JWT as a URL param — it lives there for < 1 second over
     // HTTPS before being consumed and set as an httpOnly cookie.
-    const exchangeUrl = new URL(`${BASE_URL}/admin/sso-complete`)
+    const exchangeUrl = new URL(`${BASE_URL}/sso-complete`)
     exchangeUrl.searchParams.set('token', jwtToken)
     exchangeUrl.searchParams.set('dest', returnTo)
 
