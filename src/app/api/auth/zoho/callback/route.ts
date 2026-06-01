@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { SignJWT } from 'jose'
@@ -129,16 +130,21 @@ export async function GET(req: NextRequest) {
       .setExpirationTime(exp)
       .sign(secretKey)
 
-    // ── 5. Set the session cookie and redirect ─────────────────────────────
+    // ── 5. Set cookie via next/headers then redirect ───────────────────────
     //
-    // NextResponse.cookies.set() on a redirect response does NOT reliably
-    // write the Set-Cookie header in Next.js App Router — set it directly.
-    const cookieValue =
-      `payload-token=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${tokenExpSeconds}`
+    // Railway's edge proxy strips Set-Cookie from redirect responses when set
+    // manually. Using next/headers cookies() writes through Next.js's own
+    // response pipeline and survives the edge proxy.
+    const cookieStore = await cookies()
+    cookieStore.set('payload-token', jwtToken, {
+      httpOnly: true,
+      secure:   true,
+      sameSite: 'lax',
+      path:     '/',
+      maxAge:   tokenExpSeconds,
+    })
 
-    const response = NextResponse.redirect(`${BASE_URL}${returnTo}`)
-    response.headers.append('Set-Cookie', cookieValue)
-    return response
+    return NextResponse.redirect(`${BASE_URL}${returnTo}`)
 
   } catch (err) {
     console.error('Zoho SSO callback error', err)
