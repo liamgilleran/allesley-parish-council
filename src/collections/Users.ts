@@ -6,6 +6,30 @@ export const Users: CollectionConfig = {
     tokenExpiration: 7200,
     verify: false,
   },
+  hooks: {
+    beforeLogin: [
+      async ({ req }) => {
+        // Safety net: if Zoho SSO isn't configured yet, always allow local login
+        // so we can't lock ourselves out during initial setup.
+        if (!process.env.ZOHO_CLIENT_ID || !process.env.ZOHO_CLIENT_SECRET) return
+
+        try {
+          const settings = await req.payload.findGlobal({ slug: 'site-settings' })
+          if ((settings as any)?.disableLocalAuth) {
+            throw new Error(
+              'Local email/password login is disabled. Please use the "Sign in with Zoho" button. ' +
+              'To re-enable, set disable_local_auth = false in the database.',
+            )
+          }
+        } catch (err) {
+          // Re-throw our own error; for DB/fetch errors fail open (allow login)
+          if (err instanceof Error && err.message.includes('email/password login is disabled')) {
+            throw err
+          }
+        }
+      },
+    ],
+  },
   admin: {
     useAsTitle: 'email',
     group: 'Administration',

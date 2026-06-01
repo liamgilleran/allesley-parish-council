@@ -13,6 +13,17 @@ export const SiteSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: 'disableLocalAuth',
+      type: 'checkbox',
+      label: 'Disable local email/password login (force Zoho SSO)',
+      defaultValue: true,
+      admin: {
+        description:
+          'When checked, the email/password login form is rejected and users must sign in via Zoho SSO. ' +
+          'To regain emergency access, set disable_local_auth = false directly in the database.',
+      },
+    },
+    {
       // Stored as a single JSONB column — avoids Drizzle join-table creation issues.
       // Format: [{ "label": "Council Members", "href": "/council" }, ...]
       name: 'footerQuickLinks',

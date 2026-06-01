@@ -551,6 +551,21 @@ export default buildConfig({
           `)
         },
       },
+      {
+        name: '20260603_002_add_disable_local_auth',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "site_settings"
+              ADD COLUMN IF NOT EXISTS "disable_local_auth" boolean DEFAULT true;
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "site_settings"
+              DROP COLUMN IF EXISTS "disable_local_auth";
+          `)
+        },
+      },
     ],
   }),
 
