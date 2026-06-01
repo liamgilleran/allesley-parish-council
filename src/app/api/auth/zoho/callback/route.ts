@@ -131,31 +131,20 @@ export async function GET(req: NextRequest) {
       .setExpirationTime(exp)
       .sign(secretKey)
 
-    // ── 5. Return 200 HTML with cookie + meta-refresh ─────────────────────
+    // ── 5. Hand off to SSO-complete Server Component to set the cookie ────
     //
-    // Railway's edge proxy strips Set-Cookie from ALL 3xx redirect responses.
-    // Returning a 200 HTML page with a meta-refresh bypasses this — browsers
-    // honour Set-Cookie on 200 responses and then follow the refresh to /admin.
-    const dest = `${BASE_URL}${returnTo}`
-    const cookieHeader =
-      `payload-token=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${tokenExpSeconds}`
+    // Railway's edge strips Set-Cookie from Route Handler responses (both
+    // redirects and 200s). Setting the cookie from a Next.js Server Component
+    // via cookies() from next/headers works because SSR pages go through a
+    // different pipeline that Railway doesn't strip.
+    //
+    // We pass the JWT as a URL param — it lives there for < 1 second over
+    // HTTPS before being consumed and set as an httpOnly cookie.
+    const exchangeUrl = new URL(`${BASE_URL}/admin/sso-complete`)
+    exchangeUrl.searchParams.set('token', jwtToken)
+    exchangeUrl.searchParams.set('dest', returnTo)
 
-    return new Response(
-      `<!doctype html><html><head>
-        <meta http-equiv="refresh" content="0;url=${dest}">
-        <title>Signing in…</title>
-      </head><body>
-        <p>Signing in, please wait…</p>
-        <script>window.location.replace(${JSON.stringify(dest)})</script>
-      </body></html>`,
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Set-Cookie':   cookieHeader,
-        },
-      },
-    )
+    return NextResponse.redirect(exchangeUrl.toString())
 
   } catch (err) {
     console.error('Zoho SSO callback error', err)
