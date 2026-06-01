@@ -88,16 +88,18 @@ export function Header() {
                     <ChevronDown className="w-3 h-3" />
                   </button>
                   {dropdownOpen === item.label && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-council-green-light hover:text-council-green"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+                    <div className="absolute top-full left-0 w-52 z-50 pt-1">
+                      <div className="bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-council-green-light hover:text-council-green"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
