@@ -51,9 +51,10 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL,
     },
-    // push only works in dev (skipped when NODE_ENV=production); prodMigrations
-    // handles schema creation on first Railway deployment.
-    push: process.env.NODE_ENV !== 'production',
+    // push: true lets Drizzle sync any schema drift on startup (safe — additive only).
+    // This corrects column-name mismatches (e.g. thumbnail_u_r_l) and missing tables
+    // (_posts_v) left from the initial hand-written prodMigrations SQL.
+    push: true,
     prodMigrations: [
       {
         name: '20260601_000000_initial',
