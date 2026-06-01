@@ -389,6 +389,22 @@ export default buildConfig({
           `)
         },
       },
+      {
+        name: '20260602_002_add_pages_id_to_locked_docs_rels',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "payload_locked_documents_rels"
+              ADD COLUMN IF NOT EXISTS "pages_id" integer
+              REFERENCES "pages"("id") ON DELETE CASCADE;
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            ALTER TABLE "payload_locked_documents_rels"
+              DROP COLUMN IF EXISTS "pages_id";
+          `)
+        },
+      },
     ],
   }),
 
