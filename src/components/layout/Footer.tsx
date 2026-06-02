@@ -34,10 +34,10 @@ export async function Footer() {
     const siteSettings = (await payload.findGlobal({ slug: 'site-settings' })) as any
 
     if (siteSettings?.footerQuickLinks?.length) {
-      quickLinks = siteSettings.footerQuickLinks as NavLink[]
+      quickLinks = (siteSettings.footerQuickLinks as any[]).map(({ label, href }) => ({ label, href }))
     }
     if (siteSettings?.footerInfoLinks?.length) {
-      infoLinks = siteSettings.footerInfoLinks as NavLink[]
+      infoLinks = (siteSettings.footerInfoLinks as any[]).map(({ label, href }) => ({ label, href }))
     }
   } catch {
     // fall back to defaults if CMS is unavailable

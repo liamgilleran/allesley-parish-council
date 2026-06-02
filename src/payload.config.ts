@@ -647,6 +647,52 @@ export default buildConfig({
         },
       },
       {
+        // Convert footer link fields from raw JSONB columns to Payload array join tables
+        name: '20260603_007_footer_links_to_array_tables',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            -- Create join tables that Payload's array field type expects
+            CREATE TABLE IF NOT EXISTS "site_settings_footer_quick_links" (
+              "_order"       integer NOT NULL,
+              "_parent_id"   integer NOT NULL REFERENCES "site_settings"("id") ON DELETE CASCADE,
+              "id"           varchar PRIMARY KEY,
+              "label"        varchar NOT NULL,
+              "href"         varchar NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "site_settings_footer_quick_links_order_idx"
+              ON "site_settings_footer_quick_links" ("_order");
+            CREATE INDEX IF NOT EXISTS "site_settings_footer_quick_links_parent_id_idx"
+              ON "site_settings_footer_quick_links" ("_parent_id");
+
+            CREATE TABLE IF NOT EXISTS "site_settings_footer_info_links" (
+              "_order"       integer NOT NULL,
+              "_parent_id"   integer NOT NULL REFERENCES "site_settings"("id") ON DELETE CASCADE,
+              "id"           varchar PRIMARY KEY,
+              "label"        varchar NOT NULL,
+              "href"         varchar NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "site_settings_footer_info_links_order_idx"
+              ON "site_settings_footer_info_links" ("_order");
+            CREATE INDEX IF NOT EXISTS "site_settings_footer_info_links_parent_id_idx"
+              ON "site_settings_footer_info_links" ("_parent_id");
+
+            -- Remove the old jsonb columns
+            ALTER TABLE "site_settings"
+              DROP COLUMN IF EXISTS "footer_quick_links",
+              DROP COLUMN IF EXISTS "footer_info_links";
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "site_settings_footer_quick_links";
+            DROP TABLE IF EXISTS "site_settings_footer_info_links";
+            ALTER TABLE "site_settings"
+              ADD COLUMN IF NOT EXISTS "footer_quick_links" jsonb,
+              ADD COLUMN IF NOT EXISTS "footer_info_links" jsonb;
+          `)
+        },
+      },
+      {
         name: '20260603_002_add_disable_local_auth',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
