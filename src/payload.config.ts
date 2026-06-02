@@ -647,6 +647,42 @@ export default buildConfig({
         },
       },
       {
+        name: '20260603_008_nav_links_tables',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            CREATE TABLE IF NOT EXISTS "site_settings_nav_links" (
+              "_order"       integer NOT NULL,
+              "_parent_id"   integer NOT NULL REFERENCES "site_settings"("id") ON DELETE CASCADE,
+              "id"           varchar PRIMARY KEY,
+              "label"        varchar NOT NULL,
+              "href"         varchar NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "site_settings_nav_links_order_idx"
+              ON "site_settings_nav_links" ("_order");
+            CREATE INDEX IF NOT EXISTS "site_settings_nav_links_parent_id_idx"
+              ON "site_settings_nav_links" ("_parent_id");
+
+            CREATE TABLE IF NOT EXISTS "site_settings_nav_links_children" (
+              "_order"       integer NOT NULL,
+              "_parent_id"   varchar NOT NULL REFERENCES "site_settings_nav_links"("id") ON DELETE CASCADE,
+              "id"           varchar PRIMARY KEY,
+              "label"        varchar NOT NULL,
+              "href"         varchar NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "site_settings_nav_links_children_order_idx"
+              ON "site_settings_nav_links_children" ("_order");
+            CREATE INDEX IF NOT EXISTS "site_settings_nav_links_children_parent_id_idx"
+              ON "site_settings_nav_links_children" ("_parent_id");
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "site_settings_nav_links_children";
+            DROP TABLE IF EXISTS "site_settings_nav_links";
+          `)
+        },
+      },
+      {
         // Convert footer link fields from raw JSONB columns to Payload array join tables
         name: '20260603_007_footer_links_to_array_tables',
         up: async ({ db }: { db: any }) => {

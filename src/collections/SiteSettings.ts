@@ -24,6 +24,28 @@ export const SiteSettings: GlobalConfig = {
       },
     },
     {
+      name: 'navLinks',
+      type: 'array',
+      label: 'Top Navigation Links',
+      admin: {
+        description:
+          'Main nav bar links. Each item can optionally have child links which appear as a dropdown. Leave empty to use site defaults.',
+      },
+      fields: [
+        { name: 'label', type: 'text', required: true, label: 'Label' },
+        { name: 'href', type: 'text', required: true, label: 'URL' },
+        {
+          name: 'children',
+          type: 'array',
+          label: 'Dropdown children (optional)',
+          fields: [
+            { name: 'label', type: 'text', required: true },
+            { name: 'href', type: 'text', required: true },
+          ],
+        },
+      ],
+    },
+    {
       name: 'footerQuickLinks',
       type: 'array',
       label: 'Footer Quick Links',
