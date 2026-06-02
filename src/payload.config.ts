@@ -647,6 +647,99 @@ export default buildConfig({
         },
       },
       {
+        // The original _posts_v* tables had wrong column types and names.
+        // - _posts_v_version_attachments used serial id; Payload needs varchar (UUID)
+        // - push:true may have added extra columns on top causing query conflicts
+        // No posts exist yet so this is safe to drop and recreate.
+        name: '20260603_009_rebuild_posts_v_tables',
+        up: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "_posts_v_version_attachments_rels" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v_version_attachments" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v_rels" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v" CASCADE;
+
+            CREATE TABLE "_posts_v" (
+              "id"                        serial PRIMARY KEY,
+              "parent_id"                 integer REFERENCES "posts"("id") ON DELETE SET NULL,
+              "version_title"             varchar,
+              "version_slug"              varchar,
+              "version_category"          varchar,
+              "version_excerpt"           varchar,
+              "version_content"           jsonb,
+              "version_featured_image_id" integer REFERENCES "media"("id") ON DELETE SET NULL,
+              "version_published_at"      timestamp(3) with time zone,
+              "version_expires_at"        timestamp(3) with time zone,
+              "version_approval_notes"    varchar,
+              "version_updated_at"        timestamp(3) with time zone,
+              "version_created_at"        timestamp(3) with time zone,
+              "version__status"           varchar DEFAULT 'draft',
+              "created_at"                timestamp(3) with time zone DEFAULT now() NOT NULL,
+              "updated_at"                timestamp(3) with time zone DEFAULT now() NOT NULL,
+              "snapshot"                  boolean,
+              "published_locale"          varchar,
+              "autosave"                  boolean,
+              "latest"                    boolean
+            );
+            CREATE INDEX IF NOT EXISTS "_posts_v_parent_idx"          ON "_posts_v" ("parent_id");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_slug_idx"    ON "_posts_v" ("version_slug");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version__status_idx" ON "_posts_v" ("version__status");
+            CREATE INDEX IF NOT EXISTS "_posts_v_created_at_idx"      ON "_posts_v" ("created_at");
+            CREATE INDEX IF NOT EXISTS "_posts_v_updated_at_idx"      ON "_posts_v" ("updated_at");
+            CREATE INDEX IF NOT EXISTS "_posts_v_latest_idx"          ON "_posts_v" ("latest");
+
+            -- Array table: id is varchar (UUID), not serial
+            CREATE TABLE "_posts_v_version_attachments" (
+              "_order"        integer NOT NULL,
+              "_parent_id"    integer NOT NULL REFERENCES "_posts_v"("id") ON DELETE CASCADE,
+              "id"            varchar PRIMARY KEY,
+              "version_label" varchar
+            );
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_order_idx"
+              ON "_posts_v_version_attachments" ("_order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_parent_idx"
+              ON "_posts_v_version_attachments" ("_parent_id");
+
+            -- Rels for array rows: _parent_id references varchar id above
+            CREATE TABLE "_posts_v_version_attachments_rels" (
+              "id"         serial PRIMARY KEY,
+              "_order"     integer,
+              "_parent_id" varchar NOT NULL REFERENCES "_posts_v_version_attachments"("id") ON DELETE CASCADE,
+              "path"       varchar NOT NULL,
+              "media_id"   integer REFERENCES "media"("id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_rels_order_idx"
+              ON "_posts_v_version_attachments_rels" ("_order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_version_attachments_rels_parent_idx"
+              ON "_posts_v_version_attachments_rels" ("_parent_id");
+
+            -- Main rels table
+            CREATE TABLE "_posts_v_rels" (
+              "id"         serial PRIMARY KEY,
+              "_order"     integer,
+              "_parent_id" integer NOT NULL REFERENCES "_posts_v"("id") ON DELETE CASCADE,
+              "path"       varchar NOT NULL,
+              "media_id"   integer REFERENCES "media"("id") ON DELETE CASCADE,
+              "users_id"   integer REFERENCES "users"("id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_order_idx"
+              ON "_posts_v_rels" ("_order");
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_parent_idx"
+              ON "_posts_v_rels" ("_parent_id");
+            CREATE INDEX IF NOT EXISTS "_posts_v_rels_path_idx"
+              ON "_posts_v_rels" ("path");
+          `)
+        },
+        down: async ({ db }: { db: any }) => {
+          await db.execute(sql`
+            DROP TABLE IF EXISTS "_posts_v_version_attachments_rels" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v_version_attachments" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v_rels" CASCADE;
+            DROP TABLE IF EXISTS "_posts_v" CASCADE;
+          `)
+        },
+      },
+      {
         name: '20260603_008_nav_links_tables',
         up: async ({ db }: { db: any }) => {
           await db.execute(sql`
